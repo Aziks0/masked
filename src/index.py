@@ -1,4 +1,5 @@
 import cv2, tqdm, argparse
+from colorama import init
 
 from utils.video import (
     get_frame_generator,
@@ -12,6 +13,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.data import MetadataCatalog
 from detectron2.utils.logger import setup_logger
 
+init()  # Colorama init
 setup_logger()  # Detectron logger
 
 
