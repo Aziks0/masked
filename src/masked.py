@@ -44,6 +44,7 @@ def frame_anonymize(predictor, frame, metadata):
     if keypoints is None:
         return frame
 
+    # num_predictions = len(keypoints)
     keypoint_names = metadata.get("keypoint_names")
     for keypoints_prediction in keypoints:
         visible = get_visible_keypoints(keypoint_names, keypoints_prediction)
