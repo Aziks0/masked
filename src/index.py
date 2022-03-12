@@ -1,8 +1,10 @@
-import cv2, tqdm, argparse
+import numpy as np
+import cv2, tqdm, argparse, sys
 from colorama import init
 
 from utils.video import (
     get_frame_generator,
+    copy_audio_from_video,
     get_capture_and_writer,
 )
 from utils.keypoint import get_visible_keypoints, convert_keypoints
@@ -87,6 +89,11 @@ def get_parser():
         default=0.8,
         help="Minimum score for faces to be masked, [0,1]",
     )
+    parser.add_argument(
+        "--no-keep-audio",
+        action="store_true",
+        help="Don't keep the audio from the input video",
+    )
     return parser
 
 
@@ -95,4 +102,11 @@ if __name__ == "__main__":
     input_file = args.input
     output_file = args.output
     threshold = args.threshold
+    keep_audio = not args.no_keep_audio
+
     video_anonymize(input_file, output_file, threshold)
+
+    if keep_audio:
+        success = copy_audio_from_video(input_file, output_file)
+        if not success:
+            sys.exit(1)
