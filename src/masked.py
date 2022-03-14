@@ -37,7 +37,7 @@ def setup_cfg(threshold: float = 0.8):
     return cfg
 
 
-def frame_anonymize(predictor, frame, metadata, no_duplicate: bool):
+def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: int):
     predictions = predictor(frame)["instances"].to("cpu")
     if len(predictions) == 0:
         return frame
@@ -56,8 +56,11 @@ def frame_anonymize(predictor, frame, metadata, no_duplicate: bool):
     keypoint_names = metadata.get("keypoint_names")
     keypoints = get_visible_keypoints(keypoint_names, keypoints)
 
-    if no_duplicate:
+    if no_duplicate and (num_faces is None or (len(keypoints) > num_faces)):
         keypoints = remove_duplicate_keypoints(keypoints)
+
+    if num_faces is not None and len(keypoints) > num_faces:
+        keypoints = keypoints[:num_faces]
 
     for kps in keypoints:
         try:
@@ -75,6 +78,7 @@ def video_anonymize(
     output_file: str,
     threshold: float,
     no_duplicate: bool,
+    num_faces: int,
 ):
     cfg = setup_cfg(threshold)
     metadata = MetadataCatalog.get(cfg.DATASETS.TEST[0])
@@ -85,7 +89,9 @@ def video_anonymize(
     frame_gen = get_frame_generator(cap)
     bar = tqdm.tqdm(total=int(num_frames))
     for frame in frame_gen:
-        frame_anon = frame_anonymize(predictor, frame, metadata, no_duplicate)
+        frame_anon = frame_anonymize(
+            predictor, frame, metadata, no_duplicate, num_faces
+        )
         out.write(frame_anon)
         bar.update()
 
@@ -114,6 +120,14 @@ def get_parser():
         help="Try to remove duplicated detections",
     )
     parser.add_argument(
+        "--faces",
+        "-f",
+        type=int,
+        default=None,
+        help="Specify the number of faces that will appear in the video."
+        + " Only the X most probable detections will be anonymized.",
+    )
+    parser.add_argument(
         "--no-audio",
         action="store_true",
         help="Don't keep the audio from the input video",
@@ -127,9 +141,10 @@ if __name__ == "__main__":
     output_file = args.output
     threshold = args.threshold
     no_duplicate = args.remove_duplicates
+    num_faces = args.faces
     keep_audio = not args.no_audio
 
-    video_anonymize(input_file, output_file, threshold, no_duplicate)
+    video_anonymize(input_file, output_file, threshold, no_duplicate, num_faces)
 
     if keep_audio:
         success = copy_audio_from_video(input_file, output_file)
