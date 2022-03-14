@@ -117,23 +117,25 @@ def video_anonymize(
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="TODO")
-    parser.add_argument("--input", "-i", required=True, help="Path to video file")
+    parser = argparse.ArgumentParser(
+        prog="masked", description="Anonymize faces in videos"
+    )
+    parser.add_argument("--input", "-i", required=True, help="Path to video file.")
     parser.add_argument(
-        "--output", "-o", default="out.mp4", help="Path to the output video file"
+        "--output", "-o", default="out.mp4", help="Path to the output video file."
     )
     parser.add_argument(
         "--threshold",
         "-t",
         type=float,
         default=0.8,
-        help="Minimum score for faces to be masked, [0,1]",
+        help="Minimum score for faces to be masked, [0,1].",
     )
     parser.add_argument(
         "--remove-duplicates",
         "-rd",
         action="store_true",
-        help="Try to remove duplicated detections",
+        help="Try to remove duplicated detections.",
     )
     parser.add_argument(
         "--faces",
@@ -146,7 +148,7 @@ def get_parser():
     parser.add_argument(
         "--no-audio",
         action="store_true",
-        help="Don't keep the audio from the input video",
+        help="Don't keep the audio from the input video.",
     )
     parser.add_argument(
         "--visualize",
