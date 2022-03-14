@@ -7,7 +7,11 @@ from utils.video import (
     copy_audio_from_video,
     get_capture_and_writer,
 )
-from utils.keypoint import get_visible_keypoints, convert_keypoints
+from utils.keypoint import (
+    convert_keypoints,
+    get_visible_keypoints,
+    sort_keypoints_by_scores,
+)
 
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
@@ -44,7 +48,10 @@ def frame_anonymize(predictor, frame, metadata):
     if keypoints is None:
         return frame
 
-    # num_predictions = len(keypoints)
+    scores = predictions.scores
+    scores = np.asarray(scores)
+    keypoints = sort_keypoints_by_scores(keypoints, scores)
+
     keypoint_names = metadata.get("keypoint_names")
     keypoints = get_visible_keypoints(keypoint_names, keypoints)
     for kps in keypoints:

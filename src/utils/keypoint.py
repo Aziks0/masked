@@ -19,3 +19,12 @@ def get_visible_keypoints(keypoint_names, keypoints):
             visible[keypoint_name] = tuple(map(int, (x, y)))
         _keypoints.append(visible)
     return _keypoints
+
+
+def sort_keypoints_by_scores(keypoints, scores):
+    _keypoints = []
+    scores_argsort = np.argsort(scores, kind="heapsort")
+    scores_argsort = np.flipud(scores_argsort)  # Descending order
+    for argsort in scores_argsort:
+        _keypoints.append(keypoints[argsort])
+    return _keypoints
