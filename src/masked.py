@@ -18,6 +18,7 @@ from detectron2 import model_zoo
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultPredictor
 from detectron2.data import MetadataCatalog
+from detectron2.utils.video_visualizer import VideoVisualizer
 from detectron2.utils.logger import setup_logger
 
 init()  # Colorama init
@@ -73,24 +74,39 @@ def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: i
     return frame
 
 
+def visualize_predictions(predictor, frame, v: VideoVisualizer):
+    predictions = predictor(frame)["instances"].to("cpu")
+    if len(predictions) == 0:
+        return frame
+
+    visualization = v.draw_instance_predictions(frame, predictions)
+    return visualization.get_image()
+
+
 def video_anonymize(
     input_file: str,
     output_file: str,
     threshold: float,
     no_duplicate: bool,
     num_faces: int,
+    visualize: int,
 ):
     cfg = setup_cfg(threshold)
     metadata = MetadataCatalog.get(cfg.DATASETS.TEST[0])
     predictor = DefaultPredictor(cfg)
+
+    if visualize:
+        v = VideoVisualizer(metadata)
 
     cap, out = get_capture_and_writer(input_file, output_file)
     num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     frame_gen = get_frame_generator(cap)
     bar = tqdm.tqdm(total=int(num_frames))
     for frame in frame_gen:
-        frame_anon = frame_anonymize(
-            predictor, frame, metadata, no_duplicate, num_faces
+        frame_anon = (
+            visualize_predictions(predictor, frame, v)
+            if visualize
+            else frame_anonymize(predictor, frame, metadata, no_duplicate, num_faces)
         )
         out.write(frame_anon)
         bar.update()
@@ -132,6 +148,12 @@ def get_parser():
         action="store_true",
         help="Don't keep the audio from the input video",
     )
+    parser.add_argument(
+        "--visualize",
+        action="store_true",
+        help="Draw scores and boxes. This argument is only compatible"
+        + " with {input|output|threshold|no-audio} arguments.",
+    )
     return parser
 
 
@@ -143,8 +165,11 @@ if __name__ == "__main__":
     no_duplicate = args.remove_duplicates
     num_faces = args.faces
     keep_audio = not args.no_audio
+    visualize = args.visualize
 
-    video_anonymize(input_file, output_file, threshold, no_duplicate, num_faces)
+    video_anonymize(
+        input_file, output_file, threshold, no_duplicate, num_faces, visualize
+    )
 
     if keep_audio:
         success = copy_audio_from_video(input_file, output_file)
