@@ -11,6 +11,7 @@ from utils.keypoint import (
     convert_keypoints,
     get_visible_keypoints,
     sort_keypoints_by_scores,
+    remove_duplicate_keypoints,
 )
 
 from detectron2 import model_zoo
@@ -36,7 +37,7 @@ def setup_cfg(threshold: float = 0.8):
     return cfg
 
 
-def frame_anonymize(predictor, frame, metadata):
+def frame_anonymize(predictor, frame, metadata, no_duplicate: bool):
     predictions = predictor(frame)["instances"].to("cpu")
     if len(predictions) == 0:
         return frame
@@ -54,6 +55,10 @@ def frame_anonymize(predictor, frame, metadata):
 
     keypoint_names = metadata.get("keypoint_names")
     keypoints = get_visible_keypoints(keypoint_names, keypoints)
+
+    if no_duplicate:
+        keypoints = remove_duplicate_keypoints(keypoints)
+
     for kps in keypoints:
         try:
             le_x, le_y = kps["left_eye"]
@@ -65,7 +70,12 @@ def frame_anonymize(predictor, frame, metadata):
     return frame
 
 
-def video_anonymize(input_file: str, output_file: str, threshold: float):
+def video_anonymize(
+    input_file: str,
+    output_file: str,
+    threshold: float,
+    no_duplicate: bool,
+):
     cfg = setup_cfg(threshold)
     metadata = MetadataCatalog.get(cfg.DATASETS.TEST[0])
     predictor = DefaultPredictor(cfg)
@@ -75,7 +85,7 @@ def video_anonymize(input_file: str, output_file: str, threshold: float):
     frame_gen = get_frame_generator(cap)
     bar = tqdm.tqdm(total=int(num_frames))
     for frame in frame_gen:
-        frame_anon = frame_anonymize(predictor, frame, metadata)
+        frame_anon = frame_anonymize(predictor, frame, metadata, no_duplicate)
         out.write(frame_anon)
         bar.update()
 
@@ -98,6 +108,12 @@ def get_parser():
         help="Minimum score for faces to be masked, [0,1]",
     )
     parser.add_argument(
+        "--remove-duplicates",
+        "-rd",
+        action="store_true",
+        help="Try to remove duplicated detections",
+    )
+    parser.add_argument(
         "--no-audio",
         action="store_true",
         help="Don't keep the audio from the input video",
@@ -110,9 +126,10 @@ if __name__ == "__main__":
     input_file = args.input
     output_file = args.output
     threshold = args.threshold
+    no_duplicate = args.remove_duplicates
     keep_audio = not args.no_audio
 
-    video_anonymize(input_file, output_file, threshold)
+    video_anonymize(input_file, output_file, threshold, no_duplicate)
 
     if keep_audio:
         success = copy_audio_from_video(input_file, output_file)
