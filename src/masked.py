@@ -91,7 +91,7 @@ def get_parser():
         help="Minimum score for faces to be masked, [0,1]",
     )
     parser.add_argument(
-        "--no-keep-audio",
+        "--no-audio",
         action="store_true",
         help="Don't keep the audio from the input video",
     )
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     input_file = args.input
     output_file = args.output
     threshold = args.threshold
-    keep_audio = not args.no_keep_audio
+    keep_audio = not args.no_audio
 
     video_anonymize(input_file, output_file, threshold)
 
