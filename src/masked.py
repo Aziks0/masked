@@ -19,7 +19,7 @@ init()  # Colorama init
 setup_logger()  # Detectron logger
 
 
-def setup_cfg(threshold: float = 0.9):
+def setup_cfg(threshold: float = 0.8):
     cfg = get_cfg()
     cfg.merge_from_file(
         model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml")
@@ -46,11 +46,11 @@ def frame_anonymize(predictor, frame, metadata):
 
     # num_predictions = len(keypoints)
     keypoint_names = metadata.get("keypoint_names")
-    for keypoints_prediction in keypoints:
-        visible = get_visible_keypoints(keypoint_names, keypoints_prediction)
+    keypoints = get_visible_keypoints(keypoint_names, keypoints)
+    for kps in keypoints:
         try:
-            le_x, le_y = visible["left_eye"]
-            re_x, re_y = visible["right_eye"]
+            le_x, le_y = kps["left_eye"]
+            re_x, re_y = kps["right_eye"]
         except KeyError:
             continue
         cv2.line(frame, (le_x, le_y), (re_x, re_y), (0, 0, 255), 2)

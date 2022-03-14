@@ -6,14 +6,16 @@ from detectron2.structures import Keypoints
 def convert_keypoints(keypoints):
     if isinstance(keypoints, Keypoints):
         keypoints = keypoints.tensor
-    keypoints = np.asarray(keypoints)
-    return keypoints
+    return np.asarray(keypoints)
 
 
 def get_visible_keypoints(keypoint_names, keypoints):
-    visible = {}
-    for i, keypoint in enumerate(keypoints):
-        x, y, _ = keypoint
-        keypoint_name = keypoint_names[i]
-        visible[keypoint_name] = tuple(map(int, (x, y)))
-    return visible
+    _keypoints = []
+    for kps in keypoints:
+        visible = {}
+        for i, keypoint in enumerate(kps):
+            x, y, _ = keypoint
+            keypoint_name = keypoint_names[i]
+            visible[keypoint_name] = tuple(map(int, (x, y)))
+        _keypoints.append(visible)
+    return _keypoints
