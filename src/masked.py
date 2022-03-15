@@ -40,6 +40,15 @@ def setup_cfg(threshold: float = 0.8):
     return cfg
 
 
+def visualize_predictions(predictor, frame, v: VideoVisualizer):
+    predictions = predictor(frame)["instances"].to("cpu")
+    if len(predictions) == 0:
+        return frame
+
+    visualization = v.draw_instance_predictions(frame, predictions)
+    return visualization.get_image()
+
+
 def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: int):
     predictions = predictor(frame)["instances"].to("cpu")
     if len(predictions) == 0:
@@ -74,15 +83,6 @@ def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: i
         cv2.line(frame, (le_x, le_y), (re_x, re_y), (0, 0, 255), 2)
 
     return frame
-
-
-def visualize_predictions(predictor, frame, v: VideoVisualizer):
-    predictions = predictor(frame)["instances"].to("cpu")
-    if len(predictions) == 0:
-        return frame
-
-    visualization = v.draw_instance_predictions(frame, predictions)
-    return visualization.get_image()
 
 
 def video_anonymize(
