@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import cv2, tqdm, argparse, sys
 from colorama import init
