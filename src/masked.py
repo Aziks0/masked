@@ -4,12 +4,12 @@ import numpy as np
 import cv2, tqdm, argparse, sys
 from colorama import init
 
-from utils.video import (
+from video import (
     get_frame_generator,
     copy_audio_from_video,
     get_capture_and_writer,
 )
-from utils.keypoint import (
+from keypoint import (
     convert_keypoints,
     get_visible_keypoints,
     sort_keypoints_by_scores,
