@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from utils.logging import log_error
 
 from utils.number import tuples_operation
 from utils.types import number
@@ -17,12 +18,14 @@ def extend_line(
     return p1, p2
 
 
-def get_mask_coordinates(keypoints):
+def get_mask_coordinates(keypoints, mask_scale: tuple[float, float]):
     try:
         re = keypoints["right_eye"]
         le = keypoints["left_eye"]
     except KeyError:
         return None
+
+    mask_scale_width, mask_scale_height = mask_scale
 
     re_x, re_y = re
     le_x, le_y = le
@@ -30,13 +33,12 @@ def get_mask_coordinates(keypoints):
 
     # Mask height
 
-    shrinked_width = eyes_distance * 0.2
-    if shrinked_width <= 0:
-        return None
-    shinked_re, _ = extend_line(re, le, 0 - shrinked_width)
+    shrinked_width = eyes_distance * 0.7 * mask_scale_height
+    reduced_value = eyes_distance - shrinked_width
+    shrinked_re, _ = extend_line(re, le, 0 - reduced_value)
 
     # Shift vector (right_eye, left_eye) to origin
-    le_origin_x, le_origin_y = tuples_operation(le, shinked_re, "sub")
+    le_origin_x, le_origin_y = tuples_operation(le, shrinked_re, "sub")
 
     # Rotate the new vector by 90°
     le_origin_90 = (le_origin_y, 0 - le_origin_x)
@@ -47,8 +49,8 @@ def get_mask_coordinates(keypoints):
 
     # Mask width
 
-    extended_width = eyes_distance * 0.6
-    re, le = extend_line(re, le, extended_width)
+    extended_value = eyes_distance * 0.6 * mask_scale_width
+    re, le = extend_line(re, le, extended_value)
 
     # Get the mask rectangle
     # A  B

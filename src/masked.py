@@ -50,7 +50,14 @@ def visualize_predictions(predictor, frame, v: VideoVisualizer):
     return visualization.get_image()
 
 
-def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: int):
+def frame_anonymize(
+    predictor,
+    frame,
+    metadata,
+    no_duplicate: bool,
+    num_faces: int,
+    mask_scale: tuple[float, float],
+):
     predictions = predictor(frame)["instances"].to("cpu")
     if len(predictions) == 0:
         return frame
@@ -76,7 +83,7 @@ def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: i
         keypoints = keypoints[:num_faces]
 
     for kps in keypoints:
-        mask_coordinates = get_mask_coordinates(kps)
+        mask_coordinates = get_mask_coordinates(kps, mask_scale)
         if mask_coordinates is not None:
             cv2.fillPoly(frame, mask_coordinates, (0, 0, 255))
 
@@ -87,6 +94,7 @@ def video_anonymize(
     input_file: str,
     output_file: str,
     threshold: float,
+    mask_scale: tuple[float, float],
     no_duplicate: bool,
     num_faces: int,
     visualize: int,
@@ -106,7 +114,9 @@ def video_anonymize(
         frame_anon = (
             visualize_predictions(predictor, frame, v)
             if visualize
-            else frame_anonymize(predictor, frame, metadata, no_duplicate, num_faces)
+            else frame_anonymize(
+                predictor, frame, metadata, no_duplicate, num_faces, mask_scale
+            )
         )
         out.write(frame_anon)
         bar.update()
@@ -117,6 +127,15 @@ def video_anonymize(
 
 
 def get_parser():
+    def type_mask_scale(value):
+        try:
+            value = float(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError("invalid type(s), should be a float.")
+        if not value > 0:
+            raise argparse.ArgumentTypeError("invalid value(s), should be > 0.")
+        return value
+
     parser = argparse.ArgumentParser(
         prog="masked", description="Anonymize faces in videos"
     )
@@ -130,6 +149,15 @@ def get_parser():
         type=float,
         default=0.9,
         help="Minimum score for faces to be masked, [0,1].",
+    )
+    parser.add_argument(
+        "--mask-scale",
+        "-ms",
+        nargs=2,
+        type=type_mask_scale,
+        default=[1, 1],
+        metavar=("WIDTH", "HEIGHT"),
+        help="Scale factor for face masks, ]0,+∞].",
     )
     parser.add_argument(
         "--remove-duplicates",
@@ -164,13 +192,20 @@ if __name__ == "__main__":
     input_file = args.input
     output_file = args.output
     threshold = args.threshold
+    mask_scale = tuple(args.mask_scale)
     no_duplicate = args.remove_duplicates
     num_faces = args.faces
     keep_audio = not args.no_audio
     visualize = args.visualize
 
     video_anonymize(
-        input_file, output_file, threshold, no_duplicate, num_faces, visualize
+        input_file,
+        output_file,
+        threshold,
+        mask_scale,
+        no_duplicate,
+        num_faces,
+        visualize,
     )
 
     if keep_audio:
