@@ -57,6 +57,7 @@ def frame_anonymize(
     no_duplicate: bool,
     num_faces: int,
     mask_scale: tuple[float, float],
+    mask_color: tuple[int, int, int],
 ):
     predictions = predictor(frame)["instances"].to("cpu")
     if len(predictions) == 0:
@@ -85,7 +86,7 @@ def frame_anonymize(
     for kps in keypoints:
         mask_coordinates = get_mask_coordinates(kps, mask_scale)
         if mask_coordinates is not None:
-            cv2.fillPoly(frame, mask_coordinates, (0, 0, 255))
+            cv2.fillPoly(frame, mask_coordinates, mask_color)
 
     return frame
 
@@ -95,6 +96,7 @@ def video_anonymize(
     output_file: str,
     threshold: float,
     mask_scale: tuple[float, float],
+    mask_color: tuple[int, int, int],
     no_duplicate: bool,
     num_faces: int,
     visualize: int,
@@ -115,7 +117,13 @@ def video_anonymize(
             visualize_predictions(predictor, frame, v)
             if visualize
             else frame_anonymize(
-                predictor, frame, metadata, no_duplicate, num_faces, mask_scale
+                predictor,
+                frame,
+                metadata,
+                no_duplicate,
+                num_faces,
+                mask_scale,
+                mask_color,
             )
         )
         out.write(frame_anon)
@@ -134,6 +142,17 @@ def get_parser():
             raise argparse.ArgumentTypeError("invalid type(s), should be a float.")
         if not value > 0:
             raise argparse.ArgumentTypeError("invalid value(s), should be > 0.")
+        return value
+
+    def type_mask_color(value):
+        try:
+            value = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError("invalid type(s), should be an int.")
+        if value < 0 or value > 255:
+            raise argparse.ArgumentTypeError(
+                "invalid value(s), should be >= 0 and <= 255."
+            )
         return value
 
     parser = argparse.ArgumentParser(
@@ -158,6 +177,15 @@ def get_parser():
         default=[1, 1],
         metavar=("WIDTH", "HEIGHT"),
         help="Scale factor for face masks, ]0,+∞].",
+    )
+    parser.add_argument(
+        "--mask-color",
+        "-mc",
+        nargs=3,
+        type=type_mask_color,
+        default=[127, 127, 127],
+        metavar=("RED", "GREEN", "BLUE"),
+        help="Face masks color, in RGB.",
     )
     parser.add_argument(
         "--remove-duplicates",
@@ -193,6 +221,7 @@ if __name__ == "__main__":
     output_file = args.output
     threshold = args.threshold
     mask_scale = tuple(args.mask_scale)
+    mask_color = tuple(args.mask_color)[::-1]  # RGB to BGR
     no_duplicate = args.remove_duplicates
     num_faces = args.faces
     keep_audio = not args.no_audio
@@ -203,6 +232,7 @@ if __name__ == "__main__":
         output_file,
         threshold,
         mask_scale,
+        mask_color,
         no_duplicate,
         num_faces,
         visualize,
