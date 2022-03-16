@@ -27,7 +27,7 @@ init()  # Colorama init
 setup_logger()  # Detectron logger
 
 
-def setup_cfg(threshold: float = 0.8):
+def setup_cfg(threshold: float = 0.9):
     cfg = get_cfg()
     cfg.merge_from_file(
         model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml")
@@ -130,7 +130,7 @@ def get_parser():
         "--threshold",
         "-t",
         type=float,
-        default=0.8,
+        default=0.9,
         help="Minimum score for faces to be masked, [0,1].",
     )
     parser.add_argument(
