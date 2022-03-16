@@ -15,6 +15,7 @@ from keypoint import (
     sort_keypoints_by_scores,
     remove_duplicate_keypoints,
 )
+from mask import get_mask_coordinates
 
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
@@ -75,12 +76,9 @@ def frame_anonymize(predictor, frame, metadata, no_duplicate: bool, num_faces: i
         keypoints = keypoints[:num_faces]
 
     for kps in keypoints:
-        try:
-            le_x, le_y = kps["left_eye"]
-            re_x, re_y = kps["right_eye"]
-        except KeyError:
-            continue
-        cv2.line(frame, (le_x, le_y), (re_x, re_y), (0, 0, 255), 2)
+        mask_coordinates = get_mask_coordinates(kps)
+        if mask_coordinates is not None:
+            cv2.fillPoly(frame, mask_coordinates, (0, 0, 255))
 
     return frame
 
