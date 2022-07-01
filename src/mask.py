@@ -59,13 +59,16 @@ def get_mask_coordinates(keypoints, mask_scale: tuple[float, float]):
     C = tuples_operation(le_origin_90, le, "add")
     D = tuples_operation(le_origin_90, re, "add")
 
-    return np.array(
-        [
+    try:
+        return np.array(
             [
-                tuple(map(round, A)),
-                tuple(map(round, B)),
-                tuple(map(round, C)),
-                tuple(map(round, D)),
+                [
+                    tuple(map(round, A)),
+                    tuple(map(round, B)),
+                    tuple(map(round, C)),
+                    tuple(map(round, D)),
+                ]
             ]
-        ]
-    )
+        )
+    except ValueError:
+        return None
