@@ -217,7 +217,7 @@ def get_parser():
     return parser
 
 
-if __name__ == "__main__":
+def main():
     args = get_parser().parse_args()
     input_file = args.input
     output_file = args.output
@@ -246,3 +246,7 @@ if __name__ == "__main__":
         success = copy_audio_from_video(input_file, output_file)
         if not success:
             sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
