@@ -99,7 +99,7 @@ def video_anonymize(
     mask_color: tuple[int, int, int],
     no_duplicate: bool,
     num_faces: int,
-    visualize: int,
+    visualize: bool,
 ):
     cfg = setup_cfg(threshold)
     metadata = MetadataCatalog.get(cfg.DATASETS.TEST[0])
