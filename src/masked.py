@@ -28,7 +28,7 @@ init()  # Colorama init
 setup_logger()  # Detectron logger
 
 
-def setup_cfg(threshold: float = 0.9):
+def setup_cfg(threshold: float = 0.9, use_cpu=False):
     cfg = get_cfg()
     cfg.merge_from_file(
         model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml")
@@ -36,7 +36,7 @@ def setup_cfg(threshold: float = 0.9):
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(
         "COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml"
     )
-    cfg.MODEL.DEVICE = "cuda"
+    cfg.MODEL.DEVICE = "cpu" if use_cpu else "cuda"
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = threshold
     return cfg
 
@@ -99,9 +99,10 @@ def video_anonymize(
     mask_color: tuple[int, int, int],
     no_duplicate: bool,
     num_faces: int,
+    use_cpu: bool,
     visualize: bool,
 ):
-    cfg = setup_cfg(threshold)
+    cfg = setup_cfg(threshold, use_cpu)
     metadata = MetadataCatalog.get(cfg.DATASETS.TEST[0])
     predictor = DefaultPredictor(cfg)
 
@@ -201,6 +202,7 @@ def get_parser():
         help="Specify the number of faces that will appear in the video."
         + " Only the X most probable detections will be anonymized.",
     )
+    parser.add_argument("--cpu", action="store_true", help="Run on CPU instead of GPU")
     parser.add_argument(
         "--no-audio",
         action="store_true",
@@ -224,6 +226,7 @@ if __name__ == "__main__":
     mask_color = tuple(args.mask_color)[::-1]  # RGB to BGR
     no_duplicate = args.remove_duplicates
     num_faces = args.faces
+    use_cpu = args.cpu
     keep_audio = not args.no_audio
     visualize = args.visualize
 
@@ -235,6 +238,7 @@ if __name__ == "__main__":
         mask_color,
         no_duplicate,
         num_faces,
+        use_cpu,
         visualize,
     )
 
