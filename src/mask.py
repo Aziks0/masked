@@ -32,7 +32,7 @@ def get_mask_coordinates(keypoints, mask_scale: tuple[float, float]):
 
     # Mask height
 
-    shrinked_width = eyes_distance * 0.7 * mask_scale_height
+    shrinked_width = eyes_distance * 0.4 * mask_scale_height
     reduced_value = eyes_distance - shrinked_width
     shrinked_re, _ = extend_line(re, le, 0 - reduced_value)
 
