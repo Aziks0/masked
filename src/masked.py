@@ -141,7 +141,7 @@ def get_parser():
             value = float(value)
         except ValueError:
             raise argparse.ArgumentTypeError("invalid type(s), should be a float.")
-        if not value > 0:
+        if value <= 0:
             raise argparse.ArgumentTypeError("invalid value(s), should be > 0.")
         return value
 
