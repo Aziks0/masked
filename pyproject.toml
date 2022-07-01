@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "masked"
+version = "1.0.0"
+description = ""
+authors = ["Benjamin DIDIER <contact@aziks.aleeas.com>"]
+license = "GPL-3.0-or-later"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+tqdm = "^4.0.0"
+colorama = "*"
+opencv-python = "4.5.*"
+numpy = "^1.22.0"
+ffmpeg-python = "^0.2.0"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+masked = "src.masked:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
