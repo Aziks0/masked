@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from utils.logging import log_error
 
 from utils.number import tuples_operation
 from utils.types import number
